@@ -1,15 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ErrorConstants } from 'src/common/error.constants';
 import { UsersService } from 'src/users/services/users.service';
 import { LoginUserDto } from '../dto/login-user-dto';
 import * as bcrypt from 'bcryptjs';
+import { LoggerService } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UsersService,
-        private readonly jwtService: JwtService) {
+        private readonly jwtService: JwtService,
+        @Inject('LoggerService') private readonly logger: LoggerService) {
     }
 
     /**
@@ -38,10 +40,10 @@ async signIn(LoginUserDto: LoginUserDto): Promise<any> {
         throw new UnauthorizedException(ErrorConstants.INVALID_CREDENTIALS);
     }
 
-    console.log("Removing unwanted keys.");
+    this.logger.error("Removing unwanted keys.");
     let { password, _id, ...userResponse } = user.toObject();
 
-    console.log("Generating Token.");
+    this.logger.log("Generating Token.");
     const payload = { user_id: user._id, username: user.username };
     const access_token = await this.jwtService.signAsync(payload);
 
